@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sports Scheduler</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <nav>
+    <h2>Sports Scheduler</h2>
+    <div>
+      <button onclick="showLogin()">Login</button>
+      <button onclick="showRegister()">Register</button>
+    </div>
+  </nav>
+
+  <main class="hero">
+    <div>
+      <h1>Play More. Connect More. 🏆</h1>
+      <p>
+        Create sports sessions, find players, join games,
+        and manage your sports activities in one simple platform.
+    </p>
+
+      <button class="primary" onclick="showRegister()">
+        Get Started
+      </button>
+    </div>
+  </main>
+
+  <section id="authSection" class="auth-container">
+
+    <div id="loginBox" class="auth-box">
+      <h2>Login</h2>
+
+      <input id="loginEmail" type="email" placeholder="Email">
+      <input id="loginPassword" type="password" placeholder="Password">
+
+      <button class="primary" onclick="login()">Login</button>
+
+      <p>
+        Don't have an account?
+        <span onclick="showRegister()">Register</span>
+      </p>
+    </div>
+
+    <div id="registerBox" class="auth-box hidden">
+      <h2>Create Account</h2>
+
+      <input id="registerName" type="text" placeholder="Full Name">
+      <input id="registerEmail" type="email" placeholder="Email">
+      <input id="registerPassword" type="password" placeholder="Password">
+
+      <select id="registerRole">
+        <option value="player">Player</option>
+        <option value="admin">Admin</option>
+      </select>
+
+      <button class="primary" onclick="register()">Register</button>
+
+      <p>
+        Already have an account?
+        <span onclick="showLogin()">Login</span>
+      </p>
+    </div>
+
+  </section>
+
+  <script src="app.js"></script>
+
+</body>
+</html>

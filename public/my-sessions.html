@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Sessions - Sports Scheduler</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<nav>
+  <h2>Sports Scheduler</h2>
+
+  <div>
+    <button onclick="location.href='/dashboard.html'">Dashboard</button>
+    <button onclick="location.href='/sessions.html'">Available Sessions</button>
+    <button onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<main class="dashboard">
+
+  <h1>My Sessions</h1>
+
+  <h2>Sessions I Created</h2>
+  <div id="createdSessions" class="dashboard-grid"></div>
+
+  <h2 style="margin-top:40px;">Sessions I Joined</h2>
+  <div id="joinedSessions" class="dashboard-grid"></div>
+
+</main>
+
+<script>
+
+const token = localStorage.getItem("token");
+
+if (!token) {
+  location.href = "/";
+}
+
+
+async function loadMySessions() {
+
+  try {
+
+    const createdResponse = await fetch("/api/sessions/my", {
+      headers: {
+        Authorization: "Bearer " + token
+      }
+    });
+
+    const createdSessions = await createdResponse.json();
+
+    const createdContainer =
+      document.getElementById("createdSessions");
+
+    if (createdSessions.length === 0) {
+
+      createdContainer.innerHTML =
+        "<p>You have not created any sessions.</p>";
+
+    } else {
+
+      createdContainer.innerHTML = createdSessions.map(session => {
+
+        return `
+          <div class="dashboard-card">
+
+            <h2>${session.title}</h2>
+
+            <p>
+              <strong>Sport:</strong>
+              ${session.Sport ? session.Sport.name : "Unknown"}
+            </p>
+
+            <p>
+              <strong>Date:</strong>
+              ${session.date.substring(0, 10)}
+            </p>
+
+            <p>
+              <strong>Time:</strong>
+              ${session.time}
+            </p>
+
+            <p>
+              <strong>Venue:</strong>
+              ${session.venue || "Not specified"}
+            </p>
+
+            <p>
+              <strong>Team 1:</strong>
+              ${session.team1Players || "None specified"}
+            </p>
+
+            <p>
+              <strong>Team 2:</strong>
+              ${session.team2Players || "None specified"}
+            </p>
+
+            <p>
+              <strong>Additional Players Needed:</strong>
+              ${session.additionalPlayers ?? "Not specified"}
+            </p>
+
+            <p>
+              <strong>Status:</strong>
+              ${session.status}
+            </p>
+
+            ${
+              session.status === "cancelled"
+              ? `
+                <p>
+                  <strong>Cancellation Reason:</strong>
+                  ${session.cancelReason || "No reason provided"}
+                </p>
+              `
+              : `
+                <button
+                  class="primary"
+                  onclick="cancelSession(${session.id})">
+                  Cancel Session
+                </button>
+              `
+            }
+
+          </div>
+        `;
+
+      }).join("");
+    }
+
+
+    const joinedResponse = await fetch("/api/sessions/joined", {
+      headers: {
+        Authorization: "Bearer " + token
+      }
+    });
+
+    const joinedData = await joinedResponse.json();
+
+    const joinedContainer =
+      document.getElementById("joinedSessions");
+
+    if (joinedData.length === 0) {
+
+      joinedContainer.innerHTML =
+        "<p>You have not joined any sessions.</p>";
+
+    } else {
+
+      joinedContainer.innerHTML = joinedData.map(item => {
+
+        const session = item.Session;
+
+        return `
+          <div class="dashboard-card">
+
+            <h2>${session.title}</h2>
+
+            <p>
+              <strong>Sport:</strong>
+              ${session.Sport ? session.Sport.name : "Unknown"}
+            </p>
+
+            <p>
+              <strong>Date:</strong>
+              ${session.date.substring(0, 10)}
+            </p>
+
+            <p>
+              <strong>Time:</strong>
+              ${session.time}
+            </p>
+
+            <p>
+              <strong>Venue:</strong>
+              ${session.venue || "Not specified"}
+            </p>
+
+            <p>
+              <strong>Status:</strong>
+              ${session.status}
+            </p>
+
+            ${
+              session.status === "cancelled"
+              ? `
+                <p>
+                  <strong>Cancellation Reason:</strong>
+                  ${session.cancelReason || "No reason provided"}
+                </p>
+              `
+              : `
+                <p>
+                  You joined this session.
+                </p>
+              `
+            }
+
+          </div>
+        `;
+
+      }).join("");
+    }
+
+  } catch (error) {
+
+    console.error(error);
+
+    document.getElementById("createdSessions").innerHTML =
+      "<p>Unable to load your sessions.</p>";
+
+    document.getElementById("joinedSessions").innerHTML =
+      "<p>Unable to load your sessions.</p>";
+  }
+}
+
+
+async function cancelSession(id) {
+
+  const reason = prompt(
+    "Enter the reason for cancelling this session:"
+  );
+
+  if (!reason) {
+    return;
+  }
+
+  try {
+
+    const response = await fetch(`/api/sessions/${id}/cancel`, {
+
+      method: "PUT",
+
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token
+      },
+
+      body: JSON.stringify({
+        reason: reason
+      })
+
+    });
+
+    const data = await response.json();
+
+    alert(data.message);
+
+    if (response.ok) {
+      loadMySessions();
+    }
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert("Unable to cancel session");
+  }
+}
+
+
+function logout() {
+
+  localStorage.clear();
+
+  location.href = "/";
+}
+
+
+loadMySessions();
+
+</script>
+
+</body>
+</html>

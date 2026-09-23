@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Session - Sports Scheduler</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<nav>
+  <h2>Sports Scheduler</h2>
+  <div>
+    <button onclick="location.href='/dashboard.html'">Dashboard</button>
+    <button onclick="location.href='/sessions.html'">Sessions</button>
+  </div>
+</nav>
+
+<main class="auth-container">
+
+  <div class="auth-box">
+
+    <h2>Create Sports Session</h2>
+
+    <select id="sport">
+      <option value="">Select Sport</option>
+    </select>
+
+    <input
+      id="title"
+      type="text"
+      placeholder="Session Title"
+    >
+
+    <input
+      id="team1Players"
+      type="text"
+      placeholder="Team 1 Players (e.g. Rahul, Priya)"
+    >
+
+    <input
+      id="team2Players"
+      type="text"
+      placeholder="Team 2 Players (e.g. Anil, Sneha)"
+    >
+
+    <input
+      id="additionalPlayers"
+      type="number"
+      min="1"
+      placeholder="Additional Players Needed"
+    >
+
+    <input
+      id="date"
+      type="date"
+    >
+
+    <input
+      id="time"
+      type="time"
+    >
+
+    <input
+      id="venue"
+      type="text"
+      placeholder="Venue"
+    >
+
+    <button class="primary" onclick="createSession()">
+      Create Session
+    </button>
+
+  </div>
+
+</main>
+
+<script>
+
+const token = localStorage.getItem("token");
+
+if (!token) {
+  location.href = "/";
+}
+
+async function loadSports() {
+
+  const response = await fetch("/api/sports", {
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  });
+
+  const sports = await response.json();
+
+  const select = document.getElementById("sport");
+
+  sports.forEach(sport => {
+
+    const option = document.createElement("option");
+
+    option.value = sport.id;
+    option.textContent = sport.name;
+
+    select.appendChild(option);
+
+  });
+}
+
+async function createSession() {
+
+  const sportId = document.getElementById("sport").value;
+  const title = document.getElementById("title").value;
+  const team1Players = document.getElementById("team1Players").value;
+  const team2Players = document.getElementById("team2Players").value;
+  const additionalPlayers = document.getElementById("additionalPlayers").value;
+  const date = document.getElementById("date").value;
+  const time = document.getElementById("time").value;
+  const venue = document.getElementById("venue").value;
+
+  if (
+    !sportId ||
+    !title ||
+    !date ||
+    !time ||
+    !venue ||
+    !additionalPlayers
+  ) {
+    alert("Please fill all required fields");
+    return;
+  }
+
+  const response = await fetch("/api/sessions", {
+
+    method: "POST",
+
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token
+    },
+
+    body: JSON.stringify({
+      sportId: Number(sportId),
+      title,
+      team1Players,
+      team2Players,
+      additionalPlayers: Number(additionalPlayers),
+      date,
+      time,
+      venue
+    })
+
+  });
+
+  const data = await response.json();
+
+  alert(data.message);
+
+  if (response.ok) {
+    location.href = "/sessions.html";
+  }
+
+}
+
+loadSports();
+
+</script>
+
+</body>
+</html>

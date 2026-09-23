@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - Sports Scheduler</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<nav>
+  <h2>Sports Scheduler - Admin</h2>
+
+  <div>
+    <button onclick="location.href='/dashboard.html'">Dashboard</button>
+    <button onclick="logout()">Logout</button>
+  </div>
+</nav>
+
+<main class="dashboard">
+
+  <h1>Manage Sports</h1>
+
+  <div class="auth-box">
+    <h2>Create Sport</h2>
+
+    <input id="sportName" type="text" placeholder="Sport Name">
+
+    <input id="sportDescription"
+           type="text"
+           placeholder="Description">
+
+    <button class="primary" onclick="createSport()">
+      Create Sport
+    </button>
+  </div>
+
+  <h1 style="margin-top: 40px;">Sports</h1>
+
+  <div id="sportsContainer" class="dashboard-grid"></div>
+
+  <h1 style="margin-top: 50px;">Reports</h1>
+
+  <div style="margin: 20px 0;">
+
+  <label>Start Date:</label>
+  <input id="startDate" type="date">
+
+  <label>End Date:</label>
+  <input id="endDate" type="date">
+
+  <button class="primary" onclick="loadReports()">
+    Generate Report
+  </button>
+
+</div>
+
+  <div id="reportContainer" class="dashboard-grid"></div>
+
+</main>
+
+<script>
+
+const token = localStorage.getItem("token");
+const user = JSON.parse(localStorage.getItem("user"));
+
+if (!token || !user || user.role !== "admin") {
+  alert("Admin access required");
+  window.location.href = "/dashboard.html";
+}
+
+async function loadSports() {
+
+  const startDate = document.getElementById("startDate").value;
+const endDate = document.getElementById("endDate").value;
+
+let url = "/api/reports";
+
+if (startDate && endDate) {
+  url += `?startDate=${startDate}&endDate=${endDate}`;
+}
+
+const response = await fetch(url, {
+  headers: {
+    Authorization: "Bearer " + token
+  }
+});
+
+  const sports = await response.json();
+
+  const container = document.getElementById("sportsContainer");
+
+  if (sports.length === 0) {
+    container.innerHTML = "<p>No sports created yet.</p>";
+    return;
+  }
+
+  container.innerHTML = sports.map(sport => `
+
+    <div class="dashboard-card">
+
+      <h2>${sport.name}</h2>
+
+      <p>${sport.description || "No description"}</p>
+
+      <button class="primary"
+        onclick="editSport(${sport.id}, '${sport.name}', '${sport.description || ""}')">
+        Edit
+      </button>
+
+    </div>
+
+  `).join("");
+}
+
+async function createSport() {
+
+  const name = document.getElementById("sportName").value;
+  const description =
+    document.getElementById("sportDescription").value;
+
+  if (!name) {
+    alert("Enter sport name");
+    return;
+  }
+
+  const response = await fetch("/api/sports", {
+
+    method: "POST",
+
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token
+    },
+
+    body: JSON.stringify({
+      name,
+      description
+    })
+
+  });
+
+  const data = await response.json();
+
+  alert(data.message);
+
+  if (response.ok) {
+    document.getElementById("sportName").value = "";
+    document.getElementById("sportDescription").value = "";
+
+    loadSports();
+  }
+}
+
+async function editSport(id, oldName, oldDescription) {
+
+  const name = prompt("Enter new sport name:", oldName);
+
+  if (!name) {
+    return;
+  }
+
+  const description =
+    prompt("Enter description:", oldDescription);
+
+  const response = await fetch(`/api/sports/${id}`, {
+
+    method: "PUT",
+
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token
+    },
+
+    body: JSON.stringify({
+      name,
+      description
+    })
+
+  });
+
+  const data = await response.json();
+
+  alert(data.message);
+
+  if (response.ok) {
+    loadSports();
+  }
+}
+
+async function loadReports() {
+
+  const response = await fetch("/api/reports", {
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  });
+
+  const data = await response.json();
+
+  const container =
+    document.getElementById("reportContainer");
+
+  let popularity = "";
+
+  for (const sport in data.sportPopularity) {
+
+    popularity += `
+      <p>
+        <strong>${sport}:</strong>
+        ${data.sportPopularity[sport]} sessions
+      </p>
+    `;
+  }
+
+  container.innerHTML = `
+
+    <div class="dashboard-card">
+
+      <h2>Total Sessions Played</h2>
+
+      <p>${data.totalSessions}</p>
+
+    </div>
+
+    <div class="dashboard-card">
+
+      <h2>Sport Popularity</h2>
+
+      ${popularity || "<p>No sessions available.</p>"}
+
+    </div>
+
+  `;
+}
+
+function logout() {
+  localStorage.clear();
+  location.href = "/";
+}
+
+loadSports();
+
+</script>
+
+</body>
+</html>
