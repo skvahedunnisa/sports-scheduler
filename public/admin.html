@@ -27,9 +27,11 @@
 
     <input id="sportName" type="text" placeholder="Sport Name">
 
-    <input id="sportDescription"
-           type="text"
-           placeholder="Description">
+    <input
+      id="sportDescription"
+      type="text"
+      placeholder="Description"
+    >
 
     <button class="primary" onclick="createSport()">
       Create Sport
@@ -44,17 +46,17 @@
 
   <div style="margin: 20px 0;">
 
-  <label>Start Date:</label>
-  <input id="startDate" type="date">
+    <label>Start Date:</label>
+    <input id="startDate" type="date">
 
-  <label>End Date:</label>
-  <input id="endDate" type="date">
+    <label>End Date:</label>
+    <input id="endDate" type="date">
 
-  <button class="primary" onclick="loadReports()">
-    Generate Report
-  </button>
+    <button class="primary" onclick="loadReports()">
+      Generate Report
+    </button>
 
-</div>
+  </div>
 
   <div id="reportContainer" class="dashboard-grid"></div>
 
@@ -72,24 +74,20 @@ if (!token || !user || user.role !== "admin") {
 
 async function loadSports() {
 
-  const startDate = document.getElementById("startDate").value;
-const endDate = document.getElementById("endDate").value;
-
-let url = "/api/reports";
-
-if (startDate && endDate) {
-  url += `?startDate=${startDate}&endDate=${endDate}`;
-}
-
-const response = await fetch(url, {
-  headers: {
-    Authorization: "Bearer " + token
-  }
-});
+  const response = await fetch("/api/sports", {
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  });
 
   const sports = await response.json();
 
   const container = document.getElementById("sportsContainer");
+
+  if (!response.ok) {
+    container.innerHTML = "<p>Failed to load sports.</p>";
+    return;
+  }
 
   if (sports.length === 0) {
     container.innerHTML = "<p>No sports created yet.</p>";
@@ -104,7 +102,8 @@ const response = await fetch(url, {
 
       <p>${sport.description || "No description"}</p>
 
-      <button class="primary"
+      <button
+        class="primary"
         onclick="editSport(${sport.id}, '${sport.name}', '${sport.description || ""}')">
         Edit
       </button>
@@ -117,6 +116,7 @@ const response = await fetch(url, {
 async function createSport() {
 
   const name = document.getElementById("sportName").value;
+
   const description =
     document.getElementById("sportDescription").value;
 
@@ -146,7 +146,9 @@ async function createSport() {
   alert(data.message);
 
   if (response.ok) {
+
     document.getElementById("sportName").value = "";
+
     document.getElementById("sportDescription").value = "";
 
     loadSports();
@@ -191,7 +193,16 @@ async function editSport(id, oldName, oldDescription) {
 
 async function loadReports() {
 
-  const response = await fetch("/api/reports", {
+  const startDate = document.getElementById("startDate").value;
+  const endDate = document.getElementById("endDate").value;
+
+  let url = "/api/reports";
+
+  if (startDate && endDate) {
+    url += `?startDate=${startDate}&endDate=${endDate}`;
+  }
+
+  const response = await fetch(url, {
     headers: {
       Authorization: "Bearer " + token
     }
@@ -236,7 +247,9 @@ async function loadReports() {
 }
 
 function logout() {
+
   localStorage.clear();
+
   location.href = "/";
 }
 
