@@ -188,7 +188,7 @@ const getJoinedSessions = async (req, res) => {
 };
 const cancelSession = async (req, res) => {
   try {
-    const { cancelReason } = req.body;
+    const { reason } = req.body;
 
     const session = await Session.findOne({
       where: {
@@ -211,7 +211,7 @@ const cancelSession = async (req, res) => {
 
     await session.update({
       status: "cancelled",
-      cancelReason,
+      cancelReason: reason,
       cancelledAt: new Date()
     });
 
