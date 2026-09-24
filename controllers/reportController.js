@@ -3,10 +3,13 @@ const { Op } = require("sequelize");
 
 const getReports = async (req, res) => {
   try {
-
     const { startDate, endDate } = req.query;
 
-    const where = {};
+    const where = {
+      status: {
+        [Op.ne]: "cancelled"
+      }
+    };
 
     if (startDate && endDate) {
       where.date = {
@@ -27,25 +30,9 @@ const getReports = async (req, res) => {
       order: [["date", "ASC"]]
     });
 
-    const now = new Date();
-
-    const playedSessions = sessions.filter(session => {
-
-      if (session.status === "cancelled") {
-        return false;
-      }
-
-      const sessionDateTime = new Date(
-        `${session.date.toISOString().slice(0, 10)}T${session.time}`
-      );
-
-      return sessionDateTime < now;
-    });
-
     const sportPopularity = {};
 
-    playedSessions.forEach(session => {
-
+    sessions.forEach(session => {
       const sportName = session.Sport
         ? session.Sport.name
         : "Unknown";
@@ -58,18 +45,16 @@ const getReports = async (req, res) => {
     });
 
     res.json({
-      totalSessions: playedSessions.length,
+      totalSessions: sessions.length,
       sportPopularity,
-      sessions: playedSessions
+      sessions
     });
 
   } catch (error) {
-
     res.status(500).json({
       message: "Failed to generate report",
       error: error.message
     });
-
   }
 };
 
