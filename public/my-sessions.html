@@ -220,46 +220,45 @@ async function loadMySessions() {
 
 
 async function cancelSession(id) {
+    const reason = prompt("Enter cancellation reason:");
 
-  const reason = prompt(
-    "Enter the reason for cancelling this session:"
-  );
-
-  if (!reason) {
-    return;
-  }
-
-  try {
-
-    const response = await fetch(`/api/sessions/${id}/cancel`, {
-
-      method: "PUT",
-
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token
-      },
-
-      body: JSON.stringify({
-        reason: reason
-      })
-
-    });
-
-    const data = await response.json();
-
-    alert(data.message);
-
-    if (response.ok) {
-      loadMySessions();
+    if (!reason || reason.trim() === "") {
+        alert("Cancellation reason is required");
+        return;
     }
 
-  } catch (error) {
+    const confirmed = confirm(
+        "Are you sure you want to cancel this session?"
+    );
 
-    console.error(error);
+    if (!confirmed) {
+        return;
+    }
 
-    alert("Unable to cancel session");
-  }
+    try {
+        const response = await fetch(`/api/sessions/${id}/cancel`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + token
+            },
+            body: JSON.stringify({
+                reason: reason.trim()
+            })
+        });
+
+        const data = await response.json();
+
+        alert(data.message);
+
+        if (response.ok) {
+            loadMySessions();
+        }
+
+    } catch (error) {
+        console.error(error);
+        alert("Failed to cancel session");
+    }
 }
 
 
